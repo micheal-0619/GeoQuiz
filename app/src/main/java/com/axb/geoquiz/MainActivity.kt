@@ -57,10 +57,13 @@ class MainActivity : AppCompatActivity() {
 
         nextButton.setOnClickListener {
             currentIndex = (currentIndex + 1) % questionBank.size
-            val questionTextResID = questionBank[currentIndex].textResId
-            questionTextView.setText(questionTextResID)
+            updateQuestion()
         }
 
+        updateQuestion()//未点击下一个之前的初始化init
+    }
+
+    fun updateQuestion(){
         val questionTextResID = questionBank[currentIndex].textResId
         questionTextView.setText(questionTextResID)
     }
