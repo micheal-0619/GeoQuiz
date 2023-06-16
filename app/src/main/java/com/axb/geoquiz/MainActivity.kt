@@ -44,15 +44,11 @@ class MainActivity : AppCompatActivity() {
         questionTextView = findViewById(R.id.question_text_view)
 
         trueButton.setOnClickListener {
-            Log.d(TAG, "onCreate: trueButton  ")
-            val toast = Toast.makeText(this, R.string.correct_toast, Toast.LENGTH_LONG)
-            toast.setGravity(Gravity.TOP, 0, 0)//顶部显示
-            toast.show()
-
+            checkAnswer(true)
         }
 
         falseButton.setOnClickListener {
-            Toast.makeText(this, R.string.incorrect_toast, Toast.LENGTH_LONG).show()
+            checkAnswer(false)
         }
 
         nextButton.setOnClickListener {
@@ -63,8 +59,19 @@ class MainActivity : AppCompatActivity() {
         updateQuestion()//未点击下一个之前的初始化init
     }
 
-    fun updateQuestion(){
+    private fun updateQuestion() {
         val questionTextResID = questionBank[currentIndex].textResId
         questionTextView.setText(questionTextResID)
+    }
+
+    private fun checkAnswer(userAnswer: Boolean) {
+        val correctAnswer = questionBank[currentIndex].answer
+
+        val messageResID = if (userAnswer == correctAnswer) {
+            R.string.correct_toast
+        } else {
+            R.string.incorrect_toast
+        }
+        Toast.makeText(this, messageResID, Toast.LENGTH_LONG).show()
     }
 }
