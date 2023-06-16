@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var falseButton: Button
 
     private lateinit var nextButton: Button
+    private lateinit var prevButton: Button
     private lateinit var questionTextView: TextView
 
     //增加Question对象集合
@@ -41,6 +42,7 @@ class MainActivity : AppCompatActivity() {
         falseButton = findViewById(R.id.false_button)
 
         nextButton = findViewById(R.id.next_button)
+        prevButton = findViewById(R.id.previous_button)
         questionTextView = findViewById(R.id.question_text_view)
 
         trueButton.setOnClickListener {
@@ -52,6 +54,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         nextButton.setOnClickListener {
+            currentIndex = (currentIndex + 1) % questionBank.size
+            updateQuestion()
+        }
+
+        prevButton.setOnClickListener {
+            currentIndex = (questionBank.size + currentIndex - 1) % questionBank.size
+            updateQuestion()
+        }
+        questionTextView.setOnClickListener {
             currentIndex = (currentIndex + 1) % questionBank.size
             updateQuestion()
         }
