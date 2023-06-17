@@ -10,6 +10,8 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import com.axb.geoquiz.data.Question
+import java.math.RoundingMode
+import java.text.DecimalFormat
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,15 +24,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nextButton: Button
     private lateinit var prevButton: Button
     private lateinit var questionTextView: TextView
+    private var userAnsweredCorrect = 0;
+
 
     //增加Question对象集合
     private val questionBank = listOf(
-        Question(R.string.question_australia, true, false),
-        Question(R.string.question_oceans, true, false),
-        Question(R.string.question_mideast, false, false),
-        Question(R.string.question_africa, false, false),
-        Question(R.string.question_americas, true, false),
-        Question(R.string.question_asia, true, false)
+        Question(R.string.question_australia, answer = true, isAnswer = false),
+        Question(R.string.question_oceans, answer = true, isAnswer = false),
+        Question(R.string.question_mideast, answer = false, isAnswer = false),
+        Question(R.string.question_africa, answer = false, isAnswer = false),
+        Question(R.string.question_americas, answer = true, isAnswer = false),
+        Question(R.string.question_asia, answer = true, isAnswer = false)
     )
     private var currentIndex = 0
 
@@ -50,22 +54,26 @@ class MainActivity : AppCompatActivity() {
 
         trueButton.setOnClickListener {
             checkAnswer(true)
+            showPercentage()
         }
 
         falseButton.setOnClickListener {
             checkAnswer(false)
+            showPercentage()
         }
 
         nextButton.setOnClickListener {
             currentIndex = (currentIndex + 1) % questionBank.size
             updateQuestion()
             checkIfAnswered()
+            showPercentage()
         }
 
         prevButton.setOnClickListener {
             currentIndex = (questionBank.size + currentIndex - 1) % questionBank.size
             updateQuestion()
             checkIfAnswered()
+            showPercentage()
         }
         questionTextView.setOnClickListener {
             currentIndex = (currentIndex + 1) % questionBank.size
@@ -83,10 +91,12 @@ class MainActivity : AppCompatActivity() {
     private fun checkAnswer(userAnswer: Boolean) {
         val correctAnswer = questionBank[currentIndex].answer
 
-        val messageResID = if (userAnswer == correctAnswer) {
-            R.string.correct_toast
+        var messageResID = ""
+        if (userAnswer == correctAnswer) {
+            messageResID = getString(R.string.correct_toast)
+            userAnsweredCorrect++
         } else {
-            R.string.incorrect_toast
+            messageResID = getString(R.string.incorrect_toast)
         }
         questionBank[currentIndex].isAnswer = true
         checkIfAnswered()
@@ -102,6 +112,34 @@ class MainActivity : AppCompatActivity() {
         } else {
             trueButton.isEnabled = true
             falseButton.isEnabled = true
+        }
+    }
+
+    private fun showPercentage() {
+        var allAnswered = true
+        for (i in questionBank.indices) {
+            Log.d(TAG, "showPercentage: i=  $i")
+            if (!questionBank[i].isAnswer) {
+                allAnswered = false
+                break
+            }
+        }
+
+        if (allAnswered) {
+            //百分比评分，有一个值必须转成double，否则结果不正确
+            var correctMark = (userAnsweredCorrect.toDouble() / questionBank.size) * 100;
+            Log.d(
+                TAG,
+                "showPercentage: userAnsweredCorrect= $userAnsweredCorrect   ${questionBank.size}  $correctMark"
+            )
+            //保留小数点后两位
+            val format = DecimalFormat("#.##")
+            //舍弃规则，RoundingMode.FLOOR表示直接舍弃。
+            format.roundingMode = RoundingMode.FLOOR
+            val text = "正确率${format.format(correctMark)}%"
+
+            Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+
         }
     }
 
