@@ -25,12 +25,12 @@ class MainActivity : AppCompatActivity() {
 
     //增加Question对象集合
     private val questionBank = listOf(
-        Question(R.string.question_australia, true),
-        Question(R.string.question_oceans, true),
-        Question(R.string.question_mideast, false),
-        Question(R.string.question_africa, false),
-        Question(R.string.question_americas, true),
-        Question(R.string.question_asia, true)
+        Question(R.string.question_australia, true, false),
+        Question(R.string.question_oceans, true, false),
+        Question(R.string.question_mideast, false, false),
+        Question(R.string.question_africa, false, false),
+        Question(R.string.question_americas, true, false),
+        Question(R.string.question_asia, true, false)
     )
     private var currentIndex = 0
 
@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         Log.d(TAG, "onCreate(Bundle?) called ")
-        
+
         setContentView(R.layout.activity_main)
 
         trueButton = findViewById(R.id.true_button)
@@ -59,11 +59,13 @@ class MainActivity : AppCompatActivity() {
         nextButton.setOnClickListener {
             currentIndex = (currentIndex + 1) % questionBank.size
             updateQuestion()
+            checkIfAnswered()
         }
 
         prevButton.setOnClickListener {
             currentIndex = (questionBank.size + currentIndex - 1) % questionBank.size
             updateQuestion()
+            checkIfAnswered()
         }
         questionTextView.setOnClickListener {
             currentIndex = (currentIndex + 1) % questionBank.size
@@ -86,7 +88,21 @@ class MainActivity : AppCompatActivity() {
         } else {
             R.string.incorrect_toast
         }
+        questionBank[currentIndex].isAnswer = true
+        checkIfAnswered()
         Toast.makeText(this, messageResID, Toast.LENGTH_LONG).show()
+    }
+
+    private fun checkIfAnswered() {
+
+        val isAnswered = questionBank[currentIndex].isAnswer;
+        if (isAnswered) {
+            trueButton.isEnabled = false
+            falseButton.isEnabled = false
+        } else {
+            trueButton.isEnabled = true
+            falseButton.isEnabled = true
+        }
     }
 
     override fun onStart() {
