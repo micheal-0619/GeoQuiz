@@ -11,8 +11,9 @@ import java.text.DecimalFormat
 
 private const val TAG = "QuizViewModel"
 
-class QuizViewModel: ViewModel() {
+class QuizViewModel : ViewModel() {
     var currentIndex = 0
+    var isCheater = false
     private var userAnsweredCorrect = 0;
     private lateinit var text: String
 
