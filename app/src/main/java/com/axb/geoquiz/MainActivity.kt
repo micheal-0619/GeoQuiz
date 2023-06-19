@@ -3,19 +3,18 @@ package com.axb.geoquiz
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
-import android.view.View
-import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import com.axb.geoquiz.data.Question
-import java.math.RoundingMode
-import java.text.DecimalFormat
+import androidx.lifecycle.ViewModelProviders
 
+import com.axb.geoquiz.model.QuizViewModel
+
+private const val TAG: String = "MainActivity"
+private const val KEY_INDEX = "index"
+
+@Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
-
-    private val TAG: String? = "MainActivity"
 
     //使用lateinit修饰符。 这实际是告诉编译器， 在使用属性内容时， 我们会保证提供非空 的View值
     private lateinit var trueButton: Button
@@ -26,17 +25,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var questionTextView: TextView
     private var userAnsweredCorrect = 0;
 
-
-    //增加Question对象集合
-    private val questionBank = listOf(
-        Question(R.string.question_australia, answer = true, isAnswer = false),
-        Question(R.string.question_oceans, answer = true, isAnswer = false),
-        Question(R.string.question_mideast, answer = false, isAnswer = false),
-        Question(R.string.question_africa, answer = false, isAnswer = false),
-        Question(R.string.question_americas, answer = true, isAnswer = false),
-        Question(R.string.question_asia, answer = true, isAnswer = false)
-    )
-    private var currentIndex = 0
+    private val quizViewModel: QuizViewModel by lazy {
+        ViewModelProviders.of(this).get(QuizViewModel::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +35,9 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "onCreate(Bundle?) called ")
 
         setContentView(R.layout.activity_main)
+
+        val currentIndex = savedInstanceState?.getInt(KEY_INDEX, 0) ?: 0
+        quizViewModel.currentIndex = currentIndex
 
         trueButton = findViewById(R.id.true_button)
         falseButton = findViewById(R.id.false_button)
@@ -54,29 +48,23 @@ class MainActivity : AppCompatActivity() {
 
         trueButton.setOnClickListener {
             checkAnswer(true)
-            showPercentage()
         }
 
         falseButton.setOnClickListener {
             checkAnswer(false)
-            showPercentage()
         }
 
         nextButton.setOnClickListener {
-            currentIndex = (currentIndex + 1) % questionBank.size
+            quizViewModel.moveToNext()
             updateQuestion()
-            checkIfAnswered()
-            showPercentage()
         }
 
         prevButton.setOnClickListener {
-            currentIndex = (questionBank.size + currentIndex - 1) % questionBank.size
+            quizViewModel.moveToPrevious()
             updateQuestion()
-            checkIfAnswered()
-            showPercentage()
         }
         questionTextView.setOnClickListener {
-            currentIndex = (currentIndex + 1) % questionBank.size
+            quizViewModel.moveToNext()
             updateQuestion()
         }
 
@@ -84,63 +72,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateQuestion() {
-        val questionTextResID = questionBank[currentIndex].textResId
+        val questionTextResID = quizViewModel.currentQuestionText
         questionTextView.setText(questionTextResID)
     }
 
     private fun checkAnswer(userAnswer: Boolean) {
-        val correctAnswer = questionBank[currentIndex].answer
+        val correctAnswer = quizViewModel.currentQuestionAnswer
 
-        var messageResID = ""
-        if (userAnswer == correctAnswer) {
-            messageResID = getString(R.string.correct_toast)
-            userAnsweredCorrect++
+        val messageResID = if (userAnswer == correctAnswer) {
+            getString(R.string.correct_toast)
         } else {
-            messageResID = getString(R.string.incorrect_toast)
+            getString(R.string.incorrect_toast)
         }
-        questionBank[currentIndex].isAnswer = true
-        checkIfAnswered()
+        // questionBank[currentIndex].isAnswer = true
+
+        quizViewModel.isAnswer = true
         Toast.makeText(this, messageResID, Toast.LENGTH_LONG).show()
     }
 
-    private fun checkIfAnswered() {
-
-        val isAnswered = questionBank[currentIndex].isAnswer;
-        if (isAnswered) {
-            trueButton.isEnabled = false
-            falseButton.isEnabled = false
-        } else {
-            trueButton.isEnabled = true
-            falseButton.isEnabled = true
-        }
-    }
-
-    private fun showPercentage() {
-        var allAnswered = true
-        for (i in questionBank.indices) {
-            Log.d(TAG, "showPercentage: i=  $i")
-            if (!questionBank[i].isAnswer) {
-                allAnswered = false
-                break
-            }
-        }
-
-        if (allAnswered) {
-            //百分比评分，有一个值必须转成double，否则结果不正确
-            var correctMark = (userAnsweredCorrect.toDouble() / questionBank.size) * 100;
-            Log.d(
-                TAG,
-                "showPercentage: userAnsweredCorrect= $userAnsweredCorrect   ${questionBank.size}  $correctMark"
-            )
-            //保留小数点后两位
-            val format = DecimalFormat("#.##")
-            //舍弃规则，RoundingMode.FLOOR表示直接舍弃。
-            format.roundingMode = RoundingMode.FLOOR
-            val text = "正确率${format.format(correctMark)}%"
-
-            Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
-
-        }
+    override fun onSaveInstanceState(savedInstanceState: Bundle) {
+        super.onSaveInstanceState(savedInstanceState)
+        Log.i(TAG, "onSaveInstanceState")
+        savedInstanceState.putInt(KEY_INDEX, quizViewModel.currentIndex)
     }
 
     override fun onStart() {
